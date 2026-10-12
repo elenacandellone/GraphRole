@@ -1,4 +1,5 @@
 import warnings
+from typing import Optional
 
 import numpy as np
 from sklearn.cluster import KMeans
@@ -10,13 +11,15 @@ from graphrole.types import FactorTuple
 def get_nmf_decomposition(
     X: np.ndarray,
     n_roles: int,
+    random_state: Optional[int] = None,
 ) -> FactorTuple:
     """
     Compute NMF decomposition
     :param X: matrix to factor
     :param n_roles: rank of decomposition
+    :param random_state: optional seed for the (randomized SVD) NNDSVD initialization
     """
-    nmf = NMF(n_components=n_roles, solver='mu', init='nndsvda')
+    nmf = NMF(n_components=n_roles, solver='mu', init='nndsvda', random_state=random_state)
     with warnings.catch_warnings():
         # ignore convergence warning from NMF since
         # this will result in a large cost anyways

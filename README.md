@@ -6,6 +6,24 @@
 
 Automatic feature extraction and node role assignment for transfer learning on graphs; based on the ReFeX/RolX algorithms [1, 2] of Henderson, et al.
 
+> **Fork notice.** This is a fork of [dkaslovsky/GraphRole](https://github.com/dkaslovsky/GraphRole)
+> (v1.1.1) by Elena Candellone. Changes relative to upstream (see [CHANGELOG](./CHANGELOG.md)):
+>
+> 1. **Role factors are no longer quantized.** Upstream stores the MDL-*encoded* factors
+>    (each matrix k-means-quantized into at most 2^n_bits distinct values) as
+>    `node_role_factor` / `role_feature_factor`, so `roles` and `role_percentage` are computed from
+>    the quantized matrix. On large graphs this collapses hundreds of thousands of nodes onto a few
+>    hundred distinct role vectors. In RolX [2] quantization is only used to compute description
+>    lengths for model selection; the roles are the NMF factors. This fork returns the NMF factors
+>    of the MDL-selected model as `node_role_factor` / `role_feature_factor` and keeps the quantized
+>    ones as `node_role_factor_encoded` / `role_feature_factor_encoded` (with the selected `n_bits`).
+> 2. **Reproducible NMF.** `RoleExtractor(random_state=...)` seeds the NNDSVD initialization, and
+>    model selection factors once per number of roles (instead of once per (roles, bits) pair).
+> 3. **pandas >= 2 support.** Default ReFeX aggregations are passed by name (`'sum'`, `'mean'`);
+>    the unbound `pd.DataFrame` methods used upstream raise a `TypeError` on pandas >= 2.
+>
+> Install with `pip install git+https://github.com/elenacandellone/GraphRole.git@v1.2.0`.
+
 <p align="center">
 <img src="./examples/karate_graph.png" width=600>
 </p>

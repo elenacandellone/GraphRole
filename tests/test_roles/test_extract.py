@@ -80,12 +80,36 @@ class TestRoles(unittest.TestCase):
 
     def test__select_model(self):
         self.re = RoleExtractor(n_role_range=(2, 5), n_bit_range=(2, 5))
-        model = self.re._select_model(self.features)
+        model, model_encoded, n_bits = self.re._select_model(self.features)
         G, F = model
+        G_encoded, F_encoded = model_encoded
         expected_n_roles = 2  # model selection selects 2 for the generated data
         n_roles = G.shape[1]
         self.assertEqual(G.shape[1], F.shape[0])
         self.assertEqual(n_roles, expected_n_roles)
+        self.assertTupleEqual(G_encoded.shape, G.shape)
+        self.assertTupleEqual(F_encoded.shape, F.shape)
+        self.assertTrue(2 <= n_bits <= 5)
+        self.assertLessEqual(len(np.unique(G_encoded)), 2**n_bits)
+
+    def test_factors_not_quantized(self):
+        # node_role_factor holds the NMF factor; only the *_encoded factor is quantized
+        self.re = RoleExtractor(random_state=0)
+        self.re.extract_role_factors(self.features)
+        n_values = self.re.node_role_factor.size
+        self.assertEqual(len(np.unique(self.re.node_role_factor.values)), n_values)
+        self.assertLessEqual(len(np.unique(self.re.node_role_factor_encoded.values)), 2**self.re.n_bits)
+        self.assertTrue(
+            np.allclose(self.re.role_percentage.sum(axis=1).values, 1.0)
+        )
+
+    def test_random_state_reproducible(self):
+        factors = []
+        for _ in range(2):
+            re = RoleExtractor(n_roles=3, random_state=0)
+            re.extract_role_factors(self.features)
+            factors.append(re.node_role_factor.values)
+        np.testing.assert_array_equal(factors[0], factors[1])
 
     def test__get_encoded_role_factors(self):
         min_shape = min(self.features.shape)
